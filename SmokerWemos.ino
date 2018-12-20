@@ -34,15 +34,11 @@ void loop() {
   display.setCursor(0, 0);
   display.clearDisplay();
   
-  Serial.print("ch1 :");
-  Serial.println(adc0);
-  display.print("t1 :");
-  display.println(calcTemperture(adc0));
+  Serial.println("ch1 :" + adc0);
+  display.println("T1 :" + String(calcTemperture(adc0),1));
 
-  Serial.print("ch2 :");
-  Serial.println(adc1);
-  display.print("t2 :");
-  display.println(calcTemperture(adc1));
+  Serial.println("ch2 :" + adc1);
+  display.println("T2 :" + String(calcTemperture(adc1),1));
 
   display.display();
   delay(500);
@@ -56,19 +52,4 @@ float calcTemperture(int16_t adc) {
   float temp = 1 / (0.00335 + lanItem) - 273 ;
   return temp;
 }
-
-//void testdrawchar(void) {
-//  display.setTextSize(1);
-//  display.setTextColor(WHITE);
-//  display.setCursor(0, 0);
-//
-//  for (uint8_t i = 0; i < 168; i++) {
-//    if (i == '\n') continue;
-//    display.print(String(i) + " : "  + i + " ,");
-//    if ((i > 0) && (i % 5 == 0))
-//      display.println();
-//  }
-//  display.display();
-//
-//}
 
