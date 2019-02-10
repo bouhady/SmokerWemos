@@ -11,7 +11,7 @@
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
-
+#include "constants.h"
 
 
 
@@ -100,7 +100,8 @@ void updateDataToCloud(float temperture1, float temperture2) {
 
   if ((wifiMulti.run() == WL_CONNECTED)) {
     HTTPClient http;
-    http.begin("http://us-central1-smokingcontroller.cloudfunctions.net/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2)); //HTTP
+    String httpAddress = "http://"+ BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2);
+    http.begin(httpAddress); //HTTP
     int httpCode = http.GET();
     Serial.println("httpCode:" +  String(httpCode));
     http.end();
