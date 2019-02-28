@@ -22,11 +22,11 @@ Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
 
 #define OLED_RESET 0  // GPIO0
 Adafruit_SSD1306 display(OLED_RESET);
+WiFiManager wifiManager;
 
 void setup()   {
   Serial.begin(115200);
   Serial.println("Hello");
-
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 64x48)
   display.display();
   delay(1000);
@@ -37,11 +37,10 @@ void setup()   {
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
 
-  WiFiManager wifiManager;
 
   display.println("Connecting...");
   display.display();
-  wifiManager.autoConnect("AutoConnectAP");
+  wifiManager.autoConnect("SmokerAP");
   display.println("Connected!");
   display.display();
   delay(1000);
@@ -100,11 +99,14 @@ void updateDataToCloud(float temperture1, float temperture2) {
 
   if ((wifiMulti.run() == WL_CONNECTED)) {
     HTTPClient http;
-    String httpAddress = "http://"+ BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2);
+    String httpAddress = "http://" + BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2);
     http.begin(httpAddress); //HTTP
     int httpCode = http.GET();
     Serial.println("httpCode:" +  String(httpCode));
     http.end();
+  } else {
+//    wifiManager.setBreakAfterConfig(true);
+//    wifiManager.autoConnect("SmokerAP");
   }
 }
 
