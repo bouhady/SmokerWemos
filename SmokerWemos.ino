@@ -9,20 +9,21 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
-#include <ESP8266WiFiMulti.h>
+#include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include "constants.h"
 
 
 
 
-
-ESP8266WiFiMulti wifiMulti;
 Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
 
 #define OLED_RESET 0  // GPIO0
 Adafruit_SSD1306 display(OLED_RESET);
 WiFiManager wifiManager;
+int reconnections = 0;
+String ssidNew  ;
+String passNew  ;
 
 void setup()   {
   Serial.begin(115200);
@@ -41,7 +42,12 @@ void setup()   {
   display.println("Connecting...");
   display.display();
   wifiManager.autoConnect("SmokerAP");
-  display.println("Connected!");
+  ssidNew = WiFi.SSID();
+  passNew = WiFi.psk();
+
+  Serial.println("connected. :)" + ssidNew + " password: " + passNew);
+
+  display.println("Connected! ");
   display.display();
   delay(1000);
   display.clearDisplay();
@@ -58,9 +64,9 @@ void loop() {
   float t1, t2;
 
   adc0 = ads.readADC_SingleEnded(0);
-  Serial.println("ch1 :" + String(adc0));
+  //  Serial.println("ch1 :" + String(adc0));
   adc1 = ads.readADC_SingleEnded(1);
-  Serial.println("ch2 :" + String(adc1));
+  //  Serial.println("ch2 :" + String(adc1));
 
   display.setCursor(0, 0);
   display.clearDisplay();
@@ -70,12 +76,17 @@ void loop() {
   display.println("T1 :");
   display.setTextSize(2);
   display.println(String(t1, 1));
+  Serial.println("T1 :" + String(t1));
 
   t2 = calcTemperture(adc1);
   display.setTextSize(1);
   display.println("T2 :" );
   display.setTextSize(2);
   display.println(String(t2, 1));
+  Serial.println("T2 :" + String(t2));
+
+  display.setTextSize(1);
+  display.println(String(reconnections, 1));
 
   display.display();
 
@@ -92,12 +103,16 @@ float calcTemperture(int16_t adc) {
   float lanVal = (((float)26150 / (float)adc) - 1) / 10 ;
   float lanItem = 0.000253 * log(lanVal) ;
   float temp = 1 / (0.00335 + lanItem) - 273 ;
+  if (temp < -1)
+    temp = -1;
+  if (isnan(temp))
+    temp = -2;
   return temp;
 }
 
 void updateDataToCloud(float temperture1, float temperture2) {
 
-  if ((wifiMulti.run() == WL_CONNECTED)) {
+  if ((WiFi.status() == WL_CONNECTED)) {
     HTTPClient http;
     String httpAddress = "http://" + BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2);
     http.begin(httpAddress); //HTTP
@@ -105,8 +120,8 @@ void updateDataToCloud(float temperture1, float temperture2) {
     Serial.println("httpCode:" +  String(httpCode));
     http.end();
   } else {
-//    wifiManager.setBreakAfterConfig(true);
-//    wifiManager.autoConnect("SmokerAP");
+    WiFi.begin((const char*)ssidNew.c_str(), (const char*)passNew.c_str() );
+    reconnections++;
   }
 }
 
