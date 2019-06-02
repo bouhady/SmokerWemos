@@ -58,11 +58,13 @@ void setup()   {
 }
 
 int16_t counter = 0;
-
+  float t1sum = 0;
+  float t2sum = 0;
+  
 void loop() {
   int16_t adc0, adc1;
   float t1, t2;
-
+  
   adc0 = ads.readADC_SingleEnded(0);
   //  Serial.println("ch1 :" + String(adc0));
   adc1 = ads.readADC_SingleEnded(1);
@@ -72,6 +74,7 @@ void loop() {
   display.clearDisplay();
 
   t1 = calcTemperture(adc0);
+  t1sum+=t1;
   display.setTextSize(1);
   display.println("T1 :");
   display.setTextSize(2);
@@ -79,6 +82,7 @@ void loop() {
   Serial.println("T1 :" + String(t1));
 
   t2 = calcTemperture(adc1);
+  t2sum+=t2;
   display.setTextSize(1);
   display.println("T2 :" );
   display.setTextSize(2);
@@ -90,10 +94,14 @@ void loop() {
 
   display.display();
 
-  if (counter > 6) {
+  if (counter >= 10) {
+    display.fillCircle(60, 5, 2, WHITE);
+    display.display();
     Serial.println("updating to cloud");
-    updateDataToCloud(t1, t2);
+    updateDataToCloud(t1sum/(float)10, t2sum/(float)10);
     counter = 0;
+    t1sum = 0;
+    t2sum = 0;
   }
   counter++;
   delay(500);
