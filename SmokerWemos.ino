@@ -30,6 +30,7 @@ void setup()   {
   Serial.println("Hello");
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 64x48)
   display.display();
+  pinMode(LED_BUILTIN, OUTPUT);
   delay(1000);
   display.clearDisplay();
   ads.setGain(GAIN_ONE);        // 1x gain   +/- 4.096V  1 bit = 2mV      0.125mV
@@ -97,8 +98,10 @@ void loop() {
   if (counter >= 16) {
     display.fillCircle(60, 5, 2, WHITE);
     display.display();
+    digitalWrite(LED_BUILTIN, LOW);
     Serial.println("updating to cloud");
     updateDataToCloud(t1sum/(float)16, t2sum/(float)16);
+    digitalWrite(LED_BUILTIN, HIGH);
     counter = 0;
     t1sum = 0;
     t2sum = 0;
@@ -132,4 +135,3 @@ void updateDataToCloud(float temperture1, float temperture2) {
     reconnections++;
   }
 }
-
