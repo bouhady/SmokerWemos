@@ -94,11 +94,11 @@ void loop() {
 
   display.display();
 
-  if (counter >= 10) {
+  if (counter >= 16) {
     display.fillCircle(60, 5, 2, WHITE);
     display.display();
     Serial.println("updating to cloud");
-    updateDataToCloud(t1sum/(float)10, t2sum/(float)10);
+    updateDataToCloud(t1sum/(float)16, t2sum/(float)16);
     counter = 0;
     t1sum = 0;
     t2sum = 0;
