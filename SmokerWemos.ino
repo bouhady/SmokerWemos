@@ -1,7 +1,7 @@
 
 #include <SPI.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
+//#include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_ADS1015.h>
 #include <ESP8266WiFi.h>
@@ -24,6 +24,7 @@ WiFiManager wifiManager;
 int reconnections = 0;
 String ssidNew  ;
 String passNew  ;
+String sessionID ;
 
 void setup()   {
   Serial.begin(115200);
@@ -50,6 +51,7 @@ void setup()   {
 
   display.println("Connected! ");
   display.display();
+  sessionID = initSessionOnCloud();
   delay(1000);
   display.clearDisplay();
 
@@ -120,12 +122,31 @@ float calcTemperture(int16_t adc) {
     temp = -2;
   return temp;
 }
-
+String initSessionOnCloud() {
+Serial.println("initSessionOnCloud");
+  if ((WiFi.status() == WL_CONNECTED)) {
+    HTTPClient http;
+    String httpAddress = "http://" + BASE_URL + "/initSession";
+    http.begin(httpAddress); //HTTP
+    int httpCode = http.GET();
+    Serial.println("httpCode:" +  String(httpCode));
+    
+   String payload = http.getString();
+   Serial.println("payload:");
+   Serial.println(payload);
+   http.end();
+   return payload;
+  } else {
+    WiFi.begin((const char*)ssidNew.c_str(), (const char*)passNew.c_str() );
+    reconnections++;
+    return "";
+  }
+}
 void updateDataToCloud(float temperture1, float temperture2) {
 
   if ((WiFi.status() == WL_CONNECTED)) {
     HTTPClient http;
-    String httpAddress = "http://" + BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2);
+    String httpAddress = "http://" + BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2) + "&sessionID=" + sessionID;
     http.begin(httpAddress); //HTTP
     int httpCode = http.GET();
     Serial.println("httpCode:" +  String(httpCode));
