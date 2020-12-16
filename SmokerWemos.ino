@@ -12,6 +12,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include "constants.h"
+#include <Fonts/Picopixel.h>
 
 
 
@@ -36,10 +37,12 @@ void setup()   {
   display.clearDisplay();
   ads.setGain(GAIN_ONE);        // 1x gain   +/- 4.096V  1 bit = 2mV      0.125mV
   ads.begin();
+  display.setRotation(1);
+  display.setFont(&Picopixel);
+
   display.setTextSize(1);
   display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-
+  display.setCursor(0, 5);
 
   display.println("Connecting...");
   display.display();
@@ -54,6 +57,7 @@ void setup()   {
   sessionID = initSessionOnCloud();
   delay(1000);
   display.clearDisplay();
+  //display.setFont(&FreeSerifItalic9pt7b);
 
   //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
@@ -61,36 +65,49 @@ void setup()   {
 }
 
 int16_t counter = 0;
-  float t1sum = 0;
-  float t2sum = 0;
-  
-void loop() {
-  int16_t adc0, adc1;
-  float t1, t2;
-  
-  adc0 = ads.readADC_SingleEnded(0);
-  //  Serial.println("ch1 :" + String(adc0));
-  adc1 = ads.readADC_SingleEnded(1);
-  //  Serial.println("ch2 :" + String(adc1));
+float t1sum = 0;
+float t2sum = 0;
+float t3sum = 0;
+float t4sum = 0;
 
-  display.setCursor(0, 0);
-  display.clearDisplay();
+void loop() {
+  int16_t adc0, adc1, adc2, adc3;
+  float t1, t2, t3, t4;
+
+  adc0 = ads.readADC_SingleEnded(0);
+  adc1 = ads.readADC_SingleEnded(1);
+  adc2 = ads.readADC_SingleEnded(2);
+  adc3 = ads.readADC_SingleEnded(3);
+
 
   t1 = calcTemperture(adc0);
-  t1sum+=t1;
-  display.setTextSize(1);
-  display.println("T1 :");
-  display.setTextSize(2);
-  display.println(String(t1, 1));
-  Serial.println("T1 :" + String(t1));
+  t1sum += t1;
 
   t2 = calcTemperture(adc1);
-  t2sum+=t2;
-  display.setTextSize(1);
-  display.println("T2 :" );
-  display.setTextSize(2);
-  display.println(String(t2, 1));
+  t2sum += t2;
+
+  t3 = calcTemperture(adc2);
+  t3sum += t3;
+
+  t4 = calcTemperture(adc3);
+  t4sum += t4;
+
+  display.setCursor(0, 10);
+  display.clearDisplay();
+
+
+  printTemp(" T1:  " , t1);
+  printTemp(" T2:  " , t2);
+  printTemp(" T3:  " , t3);
+  printTemp(" T4:  " , t4);
+
+
+  Serial.println("T1 :" + String(t1));
   Serial.println("T2 :" + String(t2));
+
+  Serial.println("T3 :" + String(t3));
+  Serial.println("T4 :" + String(t4));
+
 
   display.setTextSize(1);
   display.println(String(reconnections, 1));
@@ -98,18 +115,28 @@ void loop() {
   display.display();
 
   if (counter >= 16) {
-    display.fillCircle(60, 5, 2, WHITE);
+    display.fillCircle(43, 60, 2, WHITE);
     display.display();
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("updating to cloud");
-    updateDataToCloud(t1sum/(float)16, t2sum/(float)16);
+    updateDataToCloud(t1sum / (float)16, t2sum / (float)16, t3sum / (float)16, t4sum / (float)16);
     digitalWrite(LED_BUILTIN, HIGH);
     counter = 0;
     t1sum = 0;
     t2sum = 0;
+    t3sum = 0;
+    t4sum = 0;
   }
   counter++;
   delay(500);
+}
+
+void printTemp(String label, float t) {
+  display.setTextSize(1);
+  display.print(label);
+  display.setTextSize(2);
+  display.println(String(t, 1));
+
 }
 
 float calcTemperture(int16_t adc) {
@@ -123,30 +150,30 @@ float calcTemperture(int16_t adc) {
   return temp;
 }
 String initSessionOnCloud() {
-Serial.println("initSessionOnCloud");
+  Serial.println("initSessionOnCloud");
   if ((WiFi.status() == WL_CONNECTED)) {
     HTTPClient http;
     String httpAddress = "http://" + BASE_URL + "/initSession";
     http.begin(httpAddress); //HTTP
     int httpCode = http.GET();
     Serial.println("httpCode:" +  String(httpCode));
-    
-   String payload = http.getString();
-   Serial.println("payload:");
-   Serial.println(payload);
-   http.end();
-   return payload;
+
+    String payload = http.getString();
+    Serial.println("payload:");
+    Serial.println(payload);
+    http.end();
+    return payload;
   } else {
     WiFi.begin((const char*)ssidNew.c_str(), (const char*)passNew.c_str() );
     reconnections++;
     return "";
   }
 }
-void updateDataToCloud(float temperture1, float temperture2) {
+void updateDataToCloud(float temperture1, float temperture2, float temperture3, float temperture4) {
 
   if ((WiFi.status() == WL_CONNECTED)) {
     HTTPClient http;
-    String httpAddress = "http://" + BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2) + "&sessionID=" + sessionID;
+    String httpAddress = "http://" + BASE_URL + "/multiTempUpdate?t1=" + String(temperture1) + "&t2=" + String(temperture2)+ "&t3=" + String(temperture3) + "&t4=" + String(temperture4)+ "&sessionID=" + sessionID;
     http.begin(httpAddress); //HTTP
     int httpCode = http.GET();
     Serial.println("httpCode:" +  String(httpCode));
