@@ -126,12 +126,12 @@ void loop() {
 
   display.setTextSize(1);
   display.println(String(reconnections, 1));
-  display.drawLine(0, (4 * counter), 0, 64 , WHITE);
+  display.drawLine(47, (4 * counter), 47, 62 , WHITE);
   display.display();
 
   if (counter >= 16) {
 
-    display.drawChar(2, 63, 'N', WHITE, BLACK, 1);
+    display.drawChar(44, 63, 'N', WHITE, BLACK, 1);
     display.display();
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("updating to cloud");
@@ -148,19 +148,9 @@ void loop() {
       Serial.print(F("deserializeJson() failed: "));
       Serial.println(error.f_str());
     } else {
-      int fanDuration = doc["fanDuration"];
-      Serial.print("fanDuration : " );
-      Serial.println(fanDuration);
-
+      int fanDuration = doc["fanDuration"];   
       int fanState = doc["fanState"];
-      Serial.print("fanState : ");
-      Serial.println(fanState);
-
       int id = doc["id"];
-      Serial.print("id : ");
-      Serial.print(id);
-      Serial.print(" motorCommandId : ");
-      Serial.println(motorCommandId);
 
       if (id > motorCommandId) {
         Serial.print("Set Motor : ");
@@ -175,7 +165,11 @@ void loop() {
 
   if (motorCountdown > 0) {
     Serial.println("motorCountdown : " + String(motorCountdown));
-    display.drawChar(44, 63, 'F', WHITE, BLACK, 1);
+    String fanData = "F: "+ String(motorValue)  + "%" + " > " + String(((float)motorCountdown / 1000),0) + "\"";
+    
+    display.setTextSize(1);
+    display.setCursor(2, 63);
+    display.print(fanData);
     display.display();
     motorCountdown = motorCountdown - 500;
   } else {
